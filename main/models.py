@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinValueValidator
+
 
 """This file contains the models for the main app of the Katisha project
 The models are:
@@ -18,7 +19,7 @@ The models are:
 # Wallet has the ability to top up the balance
 
 class Wallet(models.Model):
-    balance = models.DecimalField(max_digits=10, decimal_places=2)
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
 
     def top_up(self, amount):
         self.balance += amount
@@ -49,13 +50,6 @@ class Passenger(models.Model):
 # create a vehicle model
 # vehicle has a plate number, capacity, and company fields
 # override the __str__ method to return the plate number and company name
-class Vehicle(models.Model):
-    plate_number = models.CharField(max_length=9, unique=True, validators=[RegexValidator(r'^RA[A-Z]\s\d{3}\s[a-z]$')])
-    capacity = models.PositiveIntegerField()
-    company = models.ForeignKey("Company", on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f"{self.plate_number} - {self.company.name}"
 
 # Create a new model named Company that inherits from models.Model
 # Company has a name field
@@ -66,5 +60,46 @@ class Company(models.Model):
 
     def __str__(self):
         return self.name
+    
+class Vehicle(models.Model):
+    plate_number = models.CharField(max_length=9, unique=True, validators=[RegexValidator(r'^RA[A-Z]\s\d{3}\s[a-z]$')])
+    capacity = models.PositiveIntegerField()
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.plate_number} - {self.company.name}"
+    
+
+#create a route model that has an origin and destination fields
+# override the __str__ method to return the origin and destination
+class Route(models.Model):
+    origin = models.CharField(max_length=100)
+    destination = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.origin} - {self.destination}"
+    
+
+# Create a new model named Ticket that inherits from models.Model
+# Ticket has a passenger, route, vehicle, and price fields
+
+class TicketTemplate(models.Model):
+    route = models.ForeignKey(Route, on_delete=models.PROTECT)
+    vehicle = models.ForeignKey(Vehicle, on_delete=models.PROTECT)
+    price = models.DecimalField(max_digits=5, decimal_places=2)
+    departure_date = models.DateField()
+    departure_time = models.TimeField()
+    inventory = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f"{self.route} - {self.vehicle} - {self.price} - {self.inventory}"
+
+class Ticket(models.Model):
+    passenger = models.ForeignKey(Passenger, on_delete=models.CASCADE)
+    ticket_template = models.ForeignKey(TicketTemplate, on_delete=models.CASCADE)
+    purchase_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.passenger} - {self.ticket_template}"
     
 
