@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import RegexValidator, MinValueValidator
+from uuid import uuid4
 
 
 """This file contains the models for the main app of the Katisha project
@@ -34,8 +35,8 @@ class Wallet(models.Model):
 # override the __str__ method to return the username of the user
 class Passenger(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    phone = models.CharField(max_length=20)
-    birthdate = models.DateField()
+    phone = models.CharField(max_length=20, null=True)
+    birthdate = models.DateField(null=True)
     wallet = models.OneToOneField(Wallet, on_delete=models.CASCADE, null=True)
 
     def save(self, *args, **kwargs):
@@ -86,18 +87,30 @@ class Route(models.Model):
 class TicketTemplate(models.Model):
     route = models.ForeignKey(Route, on_delete=models.PROTECT)
     vehicle = models.ForeignKey(Vehicle, on_delete=models.PROTECT)
-    price = models.DecimalField(max_digits=5, decimal_places=2)
+    price = models.DecimalField(max_digits=7, decimal_places=2)
     departure_date = models.DateField()
     departure_time = models.TimeField()
     inventory = models.PositiveIntegerField()
 
     def __str__(self):
-        return f"{self.route} - {self.vehicle} - {self.price} - {self.inventory}"
+        return f"{self.route} - {self.vehicle} - {self.price} RWF - {self.inventory}"
 
 class Ticket(models.Model):
+    PAYMENT_STATUS_PENDING = 'P'
+    PAYMENT_STATUS_COMPLETE = 'C'
+    PAYMENT_STATUS_FAILED = 'F'
+
+    PAYMENT_STATUS_CHOICES = [
+        (PAYMENT_STATUS_PENDING, 'Pending'),
+        (PAYMENT_STATUS_COMPLETE, 'Complete'),
+        (PAYMENT_STATUS_FAILED, 'Failed'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid4)
     passenger = models.ForeignKey(Passenger, on_delete=models.CASCADE)
     ticket_template = models.ForeignKey(TicketTemplate, on_delete=models.CASCADE)
-    purchase_date = models.DateTimeField(auto_now_add=True)
+    payment_status = models.CharField(max_length=1, choices=PAYMENT_STATUS_CHOICES, default=PAYMENT_STATUS_PENDING)
+    purchase_date = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.passenger} - {self.ticket_template}"
