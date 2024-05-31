@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 # from rest_framework.permissions import AllowAny
-from .models import Ticket, TicketTemplate, Vehicle
-from .serializers import AddTicketTemplateSerializer, CreateTicketSerializer, TicketSerializer, TicketTemplateSerializer, VehicleSerializer
+from .models import Passenger, Ticket, TicketTemplate, Vehicle
+from .serializers import AddTicketTemplateSerializer, CreateTicketSerializer, PassengerSerializer, TicketSerializer, TicketTemplateSerializer, UpdatePassengerSerializer, VehicleSerializer
 
 class TicketTemplateViewSet(viewsets.ModelViewSet):
     queryset = TicketTemplate.objects.select_related('route', 'vehicle__company').all()
@@ -25,9 +25,15 @@ class VehicleViewSet(viewsets.ModelViewSet):
     serializer_class = VehicleSerializer
 
 
-# class PassengerViewSet(viewsets.ModelViewSet):
-#     queryset = Passenger.objects.select_related('user').all()
-#     serializer_class = PassengerSerializer
+class PassengerViewSet(viewsets.ModelViewSet):
+    queryset = Passenger.objects.select_related('user', 'wallet').all()
+    serializer_class = PassengerSerializer
+    http_method_names = ['get', 'head', 'options', 'patch', 'delete']
+
+    def get_serializer_class(self):
+        if self.request.method == 'PATCH':
+            return UpdatePassengerSerializer
+        return PassengerSerializer
 
 
 class TicketViewSet(viewsets.ModelViewSet):

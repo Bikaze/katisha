@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Route, Ticket, TicketTemplate, Vehicle
+from .models import Passenger, Route, Ticket, TicketTemplate, Vehicle
 
 
 class VehicleSerializer(serializers.ModelSerializer):
@@ -73,10 +73,19 @@ class CreateTicketSerializer(serializers.ModelSerializer):
         return Ticket.objects.create(ticket_template_id=ticket_template_id, **validated_data)
 
 
-# class PassengerSerializer(serializers.Serializer):
-#     user = serializers.StringRelatedField()
+class PassengerSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
+    wallet_balance = serializers.SerializerMethodField(method_name='get_wallet_balance', read_only=True)
 
-#     class Meta:
-#         model = Passenger
-#         fields = ['user']
+    class Meta:
+        model = Passenger
+        fields = ['id', 'birthdate', 'phone', 'wallet_balance']
 
+    def get_wallet_balance(self, obj: Passenger):
+        return obj.wallet.balance
+
+
+class UpdatePassengerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Passenger
+        fields = ['birthdate', 'phone']
