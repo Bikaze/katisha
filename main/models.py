@@ -68,7 +68,7 @@ class Vehicle(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.plate_number} - {self.company.name}"
+        return f"{self.plate_number} - {self.capacity} - {self.company.name}"
     
 
 #create a route model that has an origin and destination fields
@@ -81,9 +81,6 @@ class Route(models.Model):
         return f"{self.origin} - {self.destination}"
     
 
-# Create a new model named Ticket that inherits from models.Model
-# Ticket has a passenger, route, vehicle, and price fields
-
 class TicketTemplate(models.Model):
     route = models.ForeignKey(Route, on_delete=models.PROTECT)
     vehicle = models.ForeignKey(Vehicle, on_delete=models.PROTECT)
@@ -91,6 +88,9 @@ class TicketTemplate(models.Model):
     departure_date = models.DateField()
     departure_time = models.TimeField()
     inventory = models.PositiveIntegerField()
+
+    class Meta:
+        unique_together = ['vehicle', 'departure_date', 'departure_time']
 
     def __str__(self):
         return f"{self.route} - {self.vehicle} - {self.price} RWF - {self.inventory}"
