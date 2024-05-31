@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 # from rest_framework.permissions import AllowAny
-from .models import TicketTemplate, Vehicle
-from .serializers import AddTicketTemplateSerializer, TicketTemplateSerializer, VehicleSerializer
+from .models import Passenger, Ticket, TicketTemplate, Vehicle
+from .serializers import AddTicketTemplateSerializer, CreateTicketSerializer, PassengerSerializer, TicketSerializer, TicketTemplateSerializer, VehicleSerializer
 
 class TicketTemplateViewSet(viewsets.ModelViewSet):
     queryset = TicketTemplate.objects.select_related('route', 'vehicle__company').all()
@@ -23,3 +23,27 @@ class TicketTemplateViewSet(viewsets.ModelViewSet):
 class VehicleViewSet(viewsets.ModelViewSet):
     queryset = Vehicle.objects.select_related('company').all()
     serializer_class = VehicleSerializer
+
+
+class PassengerViewSet(viewsets.ModelViewSet):
+    queryset = Passenger.objects.select_related('user').all()
+    serializer_class = PassengerSerializer
+
+
+class TicketViewSet(viewsets.ModelViewSet):
+    def get_queryset(self):
+        return Ticket.objects.select_related('ticket_template__route',
+                                             'ticket_template__vehicle__company',
+                                             'passenger__user',
+                                             ).filter(
+                                                ticket_template_id=self.kwargs.get('ticket_pk')
+                                             )
+    
+
+    def get_serializer_context(self):
+        return {'ticket_template_id': self.kwargs.get('ticket_pk')}
+    
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return TicketSerializer
+        return CreateTicketSerializer

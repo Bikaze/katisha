@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Route, TicketTemplate, Vehicle
+from .models import Passenger, Route, Ticket, TicketTemplate, Vehicle
 
 
 class VehicleSerializer(serializers.ModelSerializer):
@@ -51,3 +51,32 @@ class AddTicketTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = TicketTemplate
         fields = ['route_id', 'vehicle_id', 'price', 'departure_date', 'departure_time', 'inventory']
+
+
+class TicketSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
+    ticket_template = TicketTemplateSerializer(read_only=True)
+
+    class Meta:
+        model = Ticket
+        fields = ['id', 'passenger', 'ticket_template', 'payment_status', 'purchase_date', 'created_at']
+
+
+class CreateTicketSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ticket
+        fields = ['passenger', 'payment_status']
+
+
+    def create(self, validated_data):
+        ticket_template_id = self.context.get('ticket_template_id') # noqa
+        return Ticket.objects.create(ticket_template_id=ticket_template_id, **validated_data)
+
+
+class PassengerSerializer(serializers.Serializer):
+    user = serializers.StringRelatedField()
+
+    class Meta:
+        model = Passenger
+        fields = ['user']
+

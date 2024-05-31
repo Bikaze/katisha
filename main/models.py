@@ -93,7 +93,7 @@ class TicketTemplate(models.Model):
         unique_together = ['vehicle', 'departure_date', 'departure_time']
 
     def __str__(self):
-        return f"{self.route} - {self.vehicle} - {self.price} RWF - {self.inventory}"
+        return f"Route: {self.route} - price: {self.price} RWF - inventory: {self.inventory}"
 
 class Ticket(models.Model):
     PAYMENT_STATUS_PENDING = 'P'
@@ -110,6 +110,7 @@ class Ticket(models.Model):
     passenger = models.ForeignKey(Passenger, on_delete=models.CASCADE)
     ticket_template = models.ForeignKey(TicketTemplate, on_delete=models.CASCADE)
     payment_status = models.CharField(max_length=1, choices=PAYMENT_STATUS_CHOICES, default=PAYMENT_STATUS_PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
     purchase_date = models.DateTimeField(auto_now=True)
 
     def __str__(self):
