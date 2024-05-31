@@ -20,6 +20,7 @@ The models are:
 # Wallet has the ability to top up the balance
 
 class Wallet(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4)
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
 
     def top_up(self, amount):
@@ -34,6 +35,7 @@ class Wallet(models.Model):
 # Passenger is a profile and has phone and birthdate fields
 # override the __str__ method to return the username of the user
 class Passenger(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     phone = models.CharField(max_length=20, null=True)
     birthdate = models.DateField(null=True)
