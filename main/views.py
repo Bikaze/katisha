@@ -39,7 +39,7 @@ class PassengerViewSet(viewsets.ModelViewSet):
         return PassengerSerializer
 
 
-class TicketViewSet(viewsets.ModelViewSet):
+class GeneratedTicketViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Ticket.objects.select_related('ticket_template__route',
                                              'ticket_template__vehicle__company',
@@ -56,3 +56,16 @@ class TicketViewSet(viewsets.ModelViewSet):
         if self.request.method == 'GET':
             return TicketSerializer
         return CreateTicketSerializer
+    
+
+class TicketHistoryViewSet(viewsets.ModelViewSet):
+    serializer_class = TicketSerializer
+
+    def get_queryset(self):
+        user_id = self.request.user.id
+        return Ticket.objects.select_related('ticket_template__route',
+                                             'ticket_template__vehicle__company',
+                                             'passenger__user',
+                                             ).filter(
+                                                passenger__user_id=user_id
+                                             )

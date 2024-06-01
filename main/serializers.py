@@ -56,6 +56,7 @@ class AddTicketTemplateSerializer(serializers.ModelSerializer):
 class TicketSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
     ticket_template = TicketTemplateSerializer(read_only=True)
+    passenger = serializers.StringRelatedField()
 
     class Meta:
         model = Ticket
