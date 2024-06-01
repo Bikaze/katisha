@@ -1,10 +1,16 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
+from rest_framework.filters import SearchFilter
+from .filters import TicketTemplateFilter
 # from rest_framework.permissions import AllowAny
 from .models import Passenger, Ticket, TicketTemplate, Vehicle
 from .serializers import AddTicketTemplateSerializer, CreateTicketSerializer, PassengerSerializer, TicketSerializer, TicketTemplateSerializer, UpdatePassengerSerializer, VehicleSerializer
 
 class TicketTemplateViewSet(viewsets.ModelViewSet):
     queryset = TicketTemplate.objects.select_related('route', 'vehicle__company').all()
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    search_fields = ['route__destination']
+    filterset_class = TicketTemplateFilter
     http_method_names = ['get', 'post', 'head', 'options', 'patch', 'delete']
 
     def get_serializer_class(self):
@@ -12,9 +18,6 @@ class TicketTemplateViewSet(viewsets.ModelViewSet):
             return TicketTemplateSerializer
         return AddTicketTemplateSerializer
     # permission_classes = [AllowAny]
-
-    # def get_queryset(self):
-    #     return TicketTemplate.objects.filter(user=self.request.user)
 
     # def perform_create(self, serializer):
     #     serializer.save(user=self.request.user)
