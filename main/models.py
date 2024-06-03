@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.db import models
 from django.conf import settings
 from django.core.validators import RegexValidator, MinValueValidator
@@ -21,14 +22,10 @@ The models are:
 
 class Wallet(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4)
-    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
-
-    def top_up(self, amount):
-        self.balance += amount
-        self.save()
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(Decimal(0))])
 
     def __str__(self):
-        return f"{self.balance} RWF"
+        return f"Balance: {self.balance} RWF"
 
 # Create a new model named Passenger that inherits from models.Model
 # Passenger has a one-to-one relationship with the User model from settings.AUTH_USER_MODEL
@@ -98,23 +95,11 @@ class TicketTemplate(models.Model):
         return f"Route: {self.route} - price: {self.price} RWF - inventory: {self.inventory}"
 
 class Ticket(models.Model):
-    PAYMENT_STATUS_PENDING = 'P'
-    PAYMENT_STATUS_COMPLETE = 'C'
-    PAYMENT_STATUS_FAILED = 'F'
-
-    PAYMENT_STATUS_CHOICES = [
-        (PAYMENT_STATUS_PENDING, 'Pending'),
-        (PAYMENT_STATUS_COMPLETE, 'Complete'),
-        (PAYMENT_STATUS_FAILED, 'Failed'),
-    ]
-
     id = models.UUIDField(primary_key=True, default=uuid4)
     passenger = models.ForeignKey(Passenger, on_delete=models.CASCADE)
     ticket_template = models.ForeignKey(TicketTemplate, on_delete=models.CASCADE)
-    payment_status = models.CharField(max_length=1, choices=PAYMENT_STATUS_CHOICES, default=PAYMENT_STATUS_PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
-    purchase_date = models.DateTimeField(auto_now=True)
-
+    
     def __str__(self):
         return f"{self.passenger} - {self.ticket_template}"
     

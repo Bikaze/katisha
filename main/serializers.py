@@ -1,5 +1,6 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from .models import Passenger, Route, Ticket, TicketTemplate, Vehicle
+from .models import Passenger, Route, Ticket, TicketTemplate, Vehicle, Wallet
 
 
 class VehicleSerializer(serializers.ModelSerializer):
@@ -60,27 +61,46 @@ class TicketSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ticket
-        fields = ['id', 'passenger', 'ticket_template', 'payment_status', 'purchase_date', 'created_at']
+        fields = ['id', 'passenger', 'ticket_template', 'created_at']
 
 
 class CreateTicketSerializer(serializers.ModelSerializer):
+    passenger = serializers.StringRelatedField(read_only=True)
+    id = serializers.UUIDField(read_only=True)
+
     class Meta:
         model = Ticket
-        fields = ['passenger', 'payment_status']
+        fields = ['id', 'passenger']
 
 
     def create(self, validated_data):
+        user_id = self.context.get('request').user.id
+        passenger = get_object_or_404(Passenger, user_id=user_id)
         ticket_template_id = self.context.get('ticket_template_id') # noqa
-        return Ticket.objects.create(ticket_template_id=ticket_template_id, **validated_data)
+        ticket_template = get_object_or_404(TicketTemplate, pk=ticket_template_id)
+
+        if passenger.wallet.balance < ticket_template.price:
+            raise serializers.ValidationError('Insufficient funds')
+        
+        passenger.wallet.balance -= ticket_template.price
+        passenger.wallet.save()
+
+        ticket_template.inventory -= 1
+        ticket_template.save()
+
+        return Ticket.objects.create(ticket_template=ticket_template, passenger=passenger)
 
 
 class PassengerSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
     wallet_balance = serializers.SerializerMethodField(method_name='get_wallet_balance', read_only=True)
+    username = serializers.StringRelatedField(source='user.username', read_only=True)
+    first_name = serializers.StringRelatedField(source='user.first_name', read_only=True)
+    last_name = serializers.StringRelatedField(source='user.last_name', read_only=True)
 
     class Meta:
         model = Passenger
-        fields = ['id', 'birthdate', 'phone', 'wallet_balance']
+        fields = ['id', 'username', 'first_name', 'last_name', 'birthdate', 'phone', 'wallet_balance']
 
     def get_wallet_balance(self, obj: Passenger):
         return obj.wallet.balance
@@ -90,3 +110,10 @@ class UpdatePassengerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Passenger
         fields = ['birthdate', 'phone']
+
+
+class WalletSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Wallet
+        fields = ['id', 'balance']
+

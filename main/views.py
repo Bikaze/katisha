@@ -3,8 +3,20 @@ from rest_framework import viewsets
 from rest_framework.filters import SearchFilter
 from .filters import TicketTemplateFilter
 # from rest_framework.permissions import AllowAny
-from .models import Passenger, Ticket, TicketTemplate, Vehicle
-from .serializers import AddTicketTemplateSerializer, CreateTicketSerializer, PassengerSerializer, TicketSerializer, TicketTemplateSerializer, UpdatePassengerSerializer, VehicleSerializer
+from .models import Passenger, Ticket, TicketTemplate, Vehicle, Wallet
+from .serializers import (    
+                            AddTicketTemplateSerializer,
+                            CreateTicketSerializer,
+                            PassengerSerializer,
+                            TicketSerializer,
+                            TicketTemplateSerializer,
+                            UpdatePassengerSerializer,
+                            VehicleSerializer,
+                            WalletSerializer,
+                        )
+
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 class TicketTemplateViewSet(viewsets.ModelViewSet):
     queryset = TicketTemplate.objects.select_related('route', 'vehicle__company').all()
@@ -33,6 +45,19 @@ class PassengerViewSet(viewsets.ModelViewSet):
     serializer_class = PassengerSerializer
     http_method_names = ['get', 'head', 'options', 'patch', 'delete']
 
+    @action(detail=False, methods=['GET', 'PATCH'])
+    def me(self, request):
+        passenger = Passenger.objects.select_related('user', 'wallet').get(user_id=request.user.id)
+        if request.method == 'GET':
+            serializer = PassengerSerializer(passenger)
+            return Response(serializer.data)
+        elif request.method == 'PATCH':
+            serializer = UpdatePassengerSerializer(passenger, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+        
+
     def get_serializer_class(self):
         if self.request.method == 'PATCH':
             return UpdatePassengerSerializer
@@ -50,7 +75,9 @@ class GeneratedTicketViewSet(viewsets.ModelViewSet):
     
 
     def get_serializer_context(self):
-        return {'ticket_template_id': self.kwargs.get('ticket_pk')}
+        return {'ticket_template_id': self.kwargs.get('ticket_pk'),
+                'request': self.request
+                }
     
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -69,3 +96,13 @@ class TicketHistoryViewSet(viewsets.ModelViewSet):
                                              ).filter(
                                                 passenger__user_id=user_id
                                              )
+
+    
+class WalletViewSet(viewsets.ModelViewSet):
+    serializer_class = WalletSerializer
+    http_method_names = ['get', 'head', 'options', 'patch']
+
+    def get_queryset(self):
+        user_id = self.request.user.id
+        # passenger = Passenger.objects.get(user_id=user_id)
+        return Wallet.objects.select_related('passenger__user').filter(passenger__user_id=user_id)
