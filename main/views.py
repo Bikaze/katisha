@@ -21,7 +21,7 @@ from rest_framework.response import Response
 class TicketTemplateViewSet(viewsets.ModelViewSet):
     queryset = TicketTemplate.objects.select_related('route', 'vehicle__company').all()
     filter_backends = [DjangoFilterBackend, SearchFilter]
-    search_fields = ['route__destination']
+    search_fields = ['route__destination', 'vehicle__company__name']
     filterset_class = TicketTemplateFilter
     http_method_names = ['get', 'post', 'head', 'options', 'patch', 'delete']
 
