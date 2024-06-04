@@ -8,5 +8,6 @@ class TicketTemplateFilter(FilterSet):
         fields = {
             'departure_date': ['exact'],
             'departure_time': ['gt', 'lt'],
+            'route__origin': ['exact'],
         }
         
