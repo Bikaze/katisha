@@ -17,6 +17,11 @@ from .serializers import (
 
 from rest_framework.decorators import action
 from rest_framework.response import Response
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 
 class TicketTemplateViewSet(viewsets.ModelViewSet):
     queryset = TicketTemplate.objects.select_related('route', 'vehicle__company').all()
@@ -29,10 +34,61 @@ class TicketTemplateViewSet(viewsets.ModelViewSet):
         if self.request.method == 'GET':
             return TicketTemplateSerializer
         return AddTicketTemplateSerializer
-    # permission_classes = [AllowAny]
+    
 
-    # def perform_create(self, serializer):
-    #     serializer.save(user=self.request.user)
+    def list(self, request, *args, **kwargs):
+        try:
+            response = super().list(request, *args, **kwargs)
+            logger.info('TicketTemplateViewSet list method called')
+            return response
+        except Exception as e:
+            logger.error(f'TicketTemplateViewSet list method error: {str(e)}')
+            raise
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            response = super().retrieve(request, *args, **kwargs)
+            logger.info('TicketTemplateViewSet retrieve method called')
+            return response
+        except Exception as e:
+            logger.error(f'TicketTemplateViewSet retrieve method error: {str(e)}')
+            raise
+
+    def create(self, request, *args, **kwargs):
+        try:
+            response = super().create(request, *args, **kwargs)
+            logger.info('TicketTemplateViewSet create method called')
+            return response
+        except Exception as e:
+            logger.error(f'TicketTemplateViewSet create method error: {str(e)}')
+            raise
+
+    def update(self, request, *args, **kwargs):
+        try:
+            response = super().update(request, *args, **kwargs)
+            logger.info('TicketTemplateViewSet update method called')
+            return response
+        except Exception as e:
+            logger.error(f'TicketTemplateViewSet update method error: {str(e)}')
+            raise
+
+    def partial_update(self, request, *args, **kwargs):
+        try:
+            response = super().partial_update(request, *args, **kwargs)
+            logger.info('TicketTemplateViewSet partial_update method called')
+            return response
+        except Exception as e:
+            logger.error(f'TicketTemplateViewSet partial_update method error: {str(e)}')
+            raise
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            response = super().destroy(request, *args, **kwargs)
+            logger.info('TicketTemplateViewSet destroy method called')
+            return response
+        except Exception as e:
+            logger.error(f'TicketTemplateViewSet destroy method error: {str(e)}')
+            raise
 
 
 class VehicleViewSet(viewsets.ModelViewSet):
