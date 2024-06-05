@@ -13,6 +13,7 @@ djangorestframework-simplejwt = "*"
 django-debug-toolbar = "*"
 drf-nested-routers = "*"
 django-cors-headers = "*"
+whitenoise = "*"
 
 [dev-packages]
 
